@@ -5,16 +5,16 @@ AI-powered code review agent for Cursor IDE and Claude Code. Analyzes uncommitte
 ## What's Included
 
 ```
-pre-review-commit/
-├── .cursor/agents/pre-commit-reviewer.md   # Cursor IDE agent
-├── .claude/skills/pre-commit-review/SKILL.md  # Claude Code skill
-└── README.md                                # This file
+pre-commit-review/
+├── .cursor/agents/pre-commit-reviewer.md          # Cursor IDE agent
+├── .claude/skills/pre-commit-review/SKILL.md      # Claude Code skill
+└── README.md                                      # This file
 ```
 
-| File | Platform | How to use |
-|------|----------|-----------|
-| `.cursor/agents/pre-commit-reviewer.md` | Cursor IDE | Copy to your repo's `.cursor/agents/`. Activates when you say "review my changes" or "pre-review". |
-| `.claude/skills/pre-commit-review/SKILL.md` | Claude Code | Copy to your repo's `.claude/skills/pre-commit-review/`. Works identically to the Cursor version. |
+| File | Platform | How to install |
+|------|----------|---------------|
+| `.cursor/agents/pre-commit-reviewer.md` | Cursor IDE | `../install.sh pre-commit-review` or copy to your project's `.cursor/agents/` |
+| `.claude/skills/pre-commit-review/SKILL.md` | Claude Code | `../install.sh pre-commit-review` or copy to your project's `.claude/skills/pre-commit-review/` |
 
 ## Commands
 

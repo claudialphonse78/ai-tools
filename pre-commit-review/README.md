@@ -1,6 +1,6 @@
 # Pre-Commit Reviewer
 
-AI-powered code review agent for Cursor IDE and Claude Code. Analyzes uncommitted changes, flags issues with urgency-based scoring, and lets you fix them interactively — all without leaving your editor.
+AI-powered code review agent for Cursor IDE and Claude Code. Analyzes uncommitted local changes **or GitHub Pull Requests by URL**, flags issues with urgency-based scoring, and lets you fix them interactively — all without leaving your editor.
 
 ## What's Included
 
@@ -18,6 +18,8 @@ pre-commit-review/
 
 ## Commands
 
+### Local changes
+
 | Command | What it does |
 |---------|-------------|
 | `review my changes` | Full review of uncommitted code |
@@ -33,6 +35,18 @@ pre-commit-review/
 | `skip` | Skip fixing, keep the review as info |
 | `re-review` | Re-run the review after fixes |
 | `help` | Show available commands and checks |
+
+### GitHub PR review
+
+| Command | What it does |
+|---------|-------------|
+| `review PR <url>` | Review a GitHub Pull Request by URL |
+| `review PR <url> for PROJ-1234` | Review PR with explicit Jira ticket context |
+| `post review` | Post findings as a GitHub PR review comment |
+| `approve PR` | Post findings and approve the PR (only if clean) |
+| `request changes` | Post findings and request changes on the PR |
+
+In PR mode the agent fetches the diff via GitHub MCP (or `gh pr diff` as fallback), runs the same checks as local mode, and posts the review back to GitHub. Fix commands are not available in PR mode since you are reviewing someone else's branch.
 
 ## What It Checks
 
@@ -80,6 +94,7 @@ These enhance the review but are not required:
 | **Atlassian MCP** (Jira) | Pulls ticket summary, description, acceptance criteria for cross-referencing | No — you can skip or paste ticket info manually |
 | **Context7 MCP** | Fetches up-to-date React and PatternFly best practices from official docs | No — embedded examples cover the basics |
 | **Web search** | Fallback for PF component verification when Context7 is unavailable | No — uses codebase patterns as last resort |
+| **GitHub MCP** | Fetches PR diff and files; posts review comments, approvals, and change requests | Required for PR mode — `gh` CLI is the fallback |
 
 ## Adapting to Your Repository
 
@@ -111,4 +126,5 @@ The agent is designed for the ODH Dashboard but can be adapted. Replace these re
 - **v1** (done): Core review — structural checks, code quality, PF standards, urgency labels
 - **v1.5** (done): Jira integration, Context7 lookups, impact analysis
 - **v2** (done): Screenshots, generate tests command, revert command, Cypress convention/flakiness checks, security checks, rollback guidance
+- **v2.5** (done): GitHub PR review mode — review any PR by URL, post findings as GitHub review comments/approvals
 - **v3** (planned): Review persona extraction — mine past PR comments to build area-specific review patterns

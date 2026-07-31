@@ -7,7 +7,7 @@ usage() {
   echo "Usage: install.sh <skill-name> [--to <project-dir>] [--uninstall]"
   echo ""
   echo "Installs a skill into a project by creating symlinks."
-  echo "Both Cursor agent and Claude skill are linked."
+  echo "Cursor agents, Cursor skills, and Claude skills are all linked."
   echo ""
   echo "Examples:"
   echo "  # Install into current directory"
@@ -22,7 +22,7 @@ usage() {
   echo "Available skills:"
   for dir in "$AI_TOOLS_DIR"/*/; do
     name=$(basename "$dir")
-    if [ -d "$dir/.cursor/agents" ] || [ -d "$dir/.claude/skills" ]; then
+    if [ -d "$dir/.cursor/agents" ] || [ -d "$dir/.cursor/skills" ] || [ -d "$dir/.claude/skills" ]; then
       echo "  - $name"
     fi
   done
@@ -64,7 +64,7 @@ if [ ! -d "$SKILL_DIR" ]; then
   echo "Available skills:"
   for dir in "$AI_TOOLS_DIR"/*/; do
     name=$(basename "$dir")
-    if [ -d "$dir/.cursor/agents" ] || [ -d "$dir/.claude/skills" ]; then
+    if [ -d "$dir/.cursor/agents" ] || [ -d "$dir/.cursor/skills" ] || [ -d "$dir/.claude/skills" ]; then
       echo "  - $name"
     fi
   done
@@ -83,6 +83,19 @@ if [ "$UNINSTALL" = true ]; then
       if [ -L "$target" ]; then
         rm "$target"
         echo "  Removed .cursor/agents/$fname"
+      fi
+    done
+  fi
+
+  # Remove Cursor skill symlinks
+  if [ -d "$SKILL_DIR/.cursor/skills" ]; then
+    for skilldir in "$SKILL_DIR/.cursor/skills"/*/; do
+      [ -d "$skilldir" ] || continue
+      sname=$(basename "$skilldir")
+      target="$PROJECT_DIR/.cursor/skills/$sname"
+      if [ -L "$target" ]; then
+        rm "$target"
+        echo "  Removed .cursor/skills/$sname"
       fi
     done
   fi
@@ -114,7 +127,18 @@ if [ -d "$SKILL_DIR/.cursor/agents" ]; then
     [ -f "$file" ] || continue
     fname=$(basename "$file")
     ln -sf "$file" "$PROJECT_DIR/.cursor/agents/$fname"
-    echo "  Cursor: .cursor/agents/$fname -> $file"
+    echo "  Cursor agent:  .cursor/agents/$fname -> $file"
+  done
+fi
+
+# Link Cursor skills (directory symlink so detection-patterns.md is co-located)
+if [ -d "$SKILL_DIR/.cursor/skills" ]; then
+  mkdir -p "$PROJECT_DIR/.cursor/skills"
+  for skilldir in "$SKILL_DIR/.cursor/skills"/*/; do
+    [ -d "$skilldir" ] || continue
+    sname=$(basename "$skilldir")
+    ln -sf "$skilldir" "$PROJECT_DIR/.cursor/skills/$sname"
+    echo "  Cursor skill:  .cursor/skills/$sname -> $skilldir"
   done
 fi
 
@@ -126,11 +150,11 @@ if [ -d "$SKILL_DIR/.claude/skills" ]; then
     mkdir -p "$PROJECT_DIR/.claude/skills/$sname"
     if [ -f "$skilldir/SKILL.md" ]; then
       ln -sf "$skilldir/SKILL.md" "$PROJECT_DIR/.claude/skills/$sname/SKILL.md"
-      echo "  Claude: .claude/skills/$sname/SKILL.md -> $skilldir/SKILL.md"
+      echo "  Claude skill:  .claude/skills/$sname/SKILL.md -> $skilldir/SKILL.md"
     fi
   done
 fi
 
 echo ""
-echo "Done. Both platforms are now linked."
+echo "Done. All platforms are now linked."
 echo "Edit the source in $SKILL_DIR — all linked projects get the update."

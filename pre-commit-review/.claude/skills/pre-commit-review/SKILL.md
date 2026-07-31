@@ -12,72 +12,63 @@ Review uncommitted changes, present findings with urgency and improvement sugges
 ```
 PRE-COMMIT REVIEWER — Help
 
-COMMANDS:
-  "review my changes"     Run a full review of uncommitted code
-  "review my changes for RHOAIENG-1234"
-                          Review with Jira ticket context
-  "review my changes with screenshot"
-                          Review code + compare against attached screenshot
-  "review my changes for RHOAIENG-1234 with screenshot"
-                          Review with Jira context + visual comparison
-  "review PR <url>"       Review a GitHub Pull Request by URL
-  "review PR <url> for RHOAIENG-1234"
-                          Review PR with Jira ticket context
-  "fix 1, 3, 5"          Fix specific findings by number (local mode only)
-  "fix all must-fix"      Fix all [Must fix] findings (local mode only)
-  "fix all should-fix"    Fix all [Should fix] findings (local mode only)
-  "generate tests for <file>"
-                          Generate unit tests for a specific source file
-  "generate tests for 2" Generate tests for the file in finding #2
-  "revert 3"             Undo fix for finding #3, keep other fixes
-  "skip"                  Skip fixing, keep the review as info
-  "re-review"             Re-run the review after fixes
-  "post review"           Post findings as a GitHub PR review comment (PR mode)
-  "approve PR"            Post findings and approve the PR (PR mode)
-  "request changes"       Post findings and request changes on the PR (PR mode)
-  "help"                  Show this help
+LOCAL MODE
+  "review my changes"                     Full review of unstaged + staged code
+  "review my changes for RHOAIENG-1234"   With Jira ticket context
+  "review my changes with screenshot"     With visual comparison
+  "review my changes as hotfix"           Light review — must-fix only
+  "review my changes as refactor"         Architecture-focused depth
+  "fix 1, 3, 5"                           Fix findings by number
+  "fix all must-fix"                      Fix all Must fix findings
+  "fix all should-fix"                    Fix all Should fix findings
+  "generate tests for <file|finding#>"    Generate unit tests
+  "revert 3"                              Undo fix for finding #3
+  "re-review"                             Re-run after fixes
+  "skip"                                  Keep review as info, no fixes
 
-WHAT I CHECK:
-  [x] Missing unit tests for utilities, hooks, components
-  [x] Missing cypress tests for page components
-  [x] Cypress convention compliance (mock/e2e rules, if test files in diff)
-  [x] Cypress flakiness patterns (hardcoded waits, missing intercepts, etc.)
-  [x] Missing contract tests for BFF routes
-  [x] console.log, eslint-disable, @ts-ignore, any, as casts
-  [x] Error handling, loading states, button spam prevention
-  [x] Type safety (as casts, optional chaining fallbacks, hook deps)
-  [x] Performance (useCallback/useMemo misuse, useEffect+useState)
-  [x] Component architecture (single responsibility, interface segregation)
-  [x] PatternFly standards (raw HTML vs PF components, inline styles)
-  [x] Security (hardcoded secrets, XSS vectors, dangerouslySetInnerHTML)
-  [x] Impact analysis (related files that should have changed but didn't)
-  [x] Jira acceptance criteria (if ticket provided)
-  [x] Visual comparison against screenshots (if provided)
+PR MODE
+  "review PR <url>"                       Review a GitHub Pull Request
+  "review PR <url> for RHOAIENG-1234"     With Jira ticket context
+  "review PR <url> as hotfix"             Light review — must-fix only
+  "review PR <url> as refactor"           Architecture-focused depth
+  "re-review PR"                          Re-check after new commits — resolved / still-open / new
+  "re-review PR since <sha>"              Scope new-finding scan to commits after SHA
+  "evaluate PR comment"                   Is an existing thread worth acting on?
+  "assess PR comment"                     Same as evaluate PR comment
+  "post review"                           Post full review as PR comment
+  "request changes"                       Post findings and request changes
+  "post inline 1,3,5"                     Post selected findings as inline comments
+  "post all must-fix inline"              Post all Must fix as inline comments
+  "post all should-fix inline"            Post all Should fix as inline comments
+  "preview comments"                      Show what would be posted before sending
 
-WHAT I PRODUCE:
-  First: Change walkthrough (what changed, grouped by area)
-         Review effort score (1-5 complexity)
-  Then findings, each tagged with urgency:
-  [Must fix]       — definitely wrong, will break or violate standards
-  [Should fix]     — very likely a problem, verify context
-  [Consider]       — improvement opportunity, not wrong per se
-  [Nitpick]        — style/formatting, totally optional
-  [FYI]            — awareness only, not directly actionable
+BOTH MODES
+  "reviewer questions"                    3-5 questions a careful reviewer would ask
+  "deep review"                           Judgment-only deep dive, no checklist
+  "deep review <file>"                    Deep dive on a specific file
+  "help"                                  Show this help
 
-  Each finding shows: problem + current code + improved code
+WHAT I CHECK
+  Pre-flight: tsc + lint before review (local mode)
+  Tests: unit (utils/hooks), Cypress mock (page components), contract (BFF routes)
+  Cypress: convention compliance, flakiness patterns
+  Hygiene: console.log, eslint-disable, @ts-ignore, any, as casts
+  Quality: error handling, type safety, performance, component architecture
+  Standards: PatternFly (raw HTML, inline styles), security (secrets, XSS)
+  Context: impact analysis, Jira AC match, visual screenshot comparison
 
-HOW FIXING WORKS:
-  I follow the project's agent rules:
-  - Unit tests    -> docs/agent-rules/unit-tests.md
-  - Cypress tests -> docs/agent-rules/cypress-mock.md
-  - Contract tests -> docs/agent-rules/contract-tests.md
-  After fixing, I can re-run the review to verify.
+URGENCY LABELS
+  [Must fix]   — definitely wrong, will break or violate standards
+  [Should fix] — very likely a problem, verify context
+  [Consider]   — improvement opportunity, not wrong
+  [Nitpick]    — style only, totally optional
+  [FYI]        — awareness only, not actionable
 
-INTEGRATIONS (optional):
-  - Jira (Atlassian MCP) — pulls ticket for acceptance criteria
-  - PatternFly docs (Context7 MCP) — verifies PF component usage
-  - Web search (fallback) — if Context7 is not available
-  - GitHub MCP — fetches PR diff and posts review comments (PR mode)
+INTEGRATIONS (all optional)
+  Jira (Atlassian MCP) — ticket summary + acceptance criteria
+  Context7 MCP         — up-to-date React + PatternFly docs
+  gh CLI (primary)     — PR diff, existing comments, post reviews (PR mode)
+  GitHub MCP           — fallback if gh CLI unavailable
 ```
 
 ---
@@ -94,8 +85,29 @@ You operate in three phases: **Review → Present → Act.** Never skip phases. 
 
 Check the user's message for a GitHub PR URL matching the pattern `https://github.com/<owner>/<repo>/pull/<number>`.
 
-- **PR URL detected → PR Review Mode:** Parse `owner`, `repo`, and `pull_number` from the URL. Skip Steps 1–1c below and jump to **Step 1 (PR mode)**.
-- **No PR URL → Local Review Mode:** Continue with Step 1 (Gather changes) as normal.
+- **PR URL detected → PR Review Mode:** Parse `owner`, `repo`, and `pull_number` from the URL. Skip **Step 1** (local gather changes) only; go to **Step 1 (PR mode)**, then **Step 1d**, then **Step 1b** and **Step 1c** as usual.
+- **No PR URL → Local Review Mode:** Continue with Step 1 (Gather changes) as normal. Skip **Step 1d** entirely (no PR thread to read).
+
+**Review depth override (both modes):** Check if the user's message ends with `as hotfix` or `as refactor`:
+- `as hotfix` → **Light review**: report Must fix findings only; skip test coverage checks and Context7; open with "Light review — blocker findings only."
+- `as refactor` → **Architecture focus**: prioritize DRY violations, impact analysis, type changes, and component responsibility; skip the new-test requirement; open with "Refactor review — architecture focus."
+- **Default (no suffix):** Full depth always.
+
+---
+
+### Step 0.5: Pre-flight checks *(Local Review Mode only)*
+
+Before gathering changes, run these two commands:
+
+```bash
+npx tsc --noEmit 2>&1 | head -20
+npm run lint 2>&1 | head -20
+```
+
+**Behaviour:**
+- If either fails: surface the failures at the top of the review output under a `⚠️ PRE-FLIGHT FAILURES` heading, then continue the review normally. Pre-flight failures are shown as context — they are not numbered findings.
+- If both pass: one line — `✅ Pre-flight: tsc + lint clean` — then proceed.
+- If neither command exists (non-JS repo, commands not found): skip silently and proceed.
 
 ---
 
@@ -120,13 +132,26 @@ If there are no changes, tell the user and stop.
 
 ### Step 1b: Jira ticket context
 
-> **In PR Review Mode:** skip the branch-name check below — instead scan the PR title and body (already fetched in Step 1 PR mode) for a Jira ticket key and suggest it if found. Then continue with the rest of this step normally.
+Resolve Jira context before asking follow-up questions. Use ticket key pattern matching (e.g. `RHOAIENG-1234`) across these signals in order:
+1. **User message** (highest confidence)
+2. **PR title/body** *(PR Review Mode only)*
+3. **Branch name** via `git branch --show-current` *(Local Review Mode only)*
 
-After gathering changes, **ask the user**: "Is there a Jira ticket for this work? (e.g. RHOAIENG-1234, or 'skip')"
+Inference rules:
+- If exactly one unique key is found, **use it automatically**. Do not ask the generic Jira question.
+- If multiple different keys are found, ask a targeted clarifying question naming the conflicting keys.
+- If no key is found, ask: "Is there a Jira ticket for this work? (e.g. RHOAIENG-1234, or 'skip')"
+- If the user says "skip", "none", or otherwise declines Jira context, continue the review without ticket lookup.
 
-Also check the branch name (`git branch --show-current`) *(Local Review Mode only)* — if it contains a ticket key pattern like `RHOAIENG-1234`, suggest it: "I see the branch references RHOAIENG-1234 — should I pull that ticket for context?"
+When a key is resolved (either inferred or confirmed), state what you are using and pull the ticket using the Atlassian MCP when configured:
 
-If the user provides a key or confirms, pull the ticket. In Cursor use the Atlassian MCP (`jira_get_issue`). In Claude Code, use the Atlassian MCP if configured, or ask the user to paste the ticket description.
+```
+CallMcpTool: user-atlassian / jira_get_issue
+  issue_key: "RHOAIENG-1234"
+  fields: "summary,description,status,labels,priority"
+```
+
+If Atlassian MCP is not available, ask the user to paste the ticket description (summary + acceptance criteria).
 
 From the ticket, extract:
 - **Summary** — what the work is supposed to accomplish
@@ -164,31 +189,87 @@ If no screenshot is provided, skip this step entirely. Do not ask for screenshot
 
 Extract `owner`, `repo`, and `pull_number` from the URL (`https://github.com/<owner>/<repo>/pull/<number>`).
 
-**Fetch PR metadata and changed files.** Use the GitHub MCP if configured:
-- `get_pull_request` (owner, repo, pull_number) — returns title, body, labels, head/base branch
-- `get_pull_request_files` (owner, repo, pull_number) — returns changed files, each with a `patch` field (the unified diff)
-
-If GitHub MCP is not available, use the `gh` CLI:
+**Fetch PR metadata — `gh` CLI (primary):**
 
 ```bash
-gh pr view <url> --json title,body,headRefName,baseRefName,labels
-gh pr diff <url>
+gh pr view <url> --json title,body,labels,baseRefName,headRefName,headRefOid,number,state
 ```
 
-From the PR metadata, extract:
+From the response, extract:
 - **Title** — look for Jira ticket keys (e.g. `RHOAIENG-1234`) to pre-populate Step 1b
 - **Body** — may contain acceptance criteria, linked issues, test instructions, or reviewer notes
 - **Labels** — e.g. `bug`, `enhancement`, `needs-review`, `wip`
 - **Base branch / head branch** — context for what this PR targets
 
-Use the `patch` field from each file (or the `gh pr diff` output) as the diff source for all review steps, exactly as you would use `git diff` output.
+**Fetch changed files and diffs:**
+
+```bash
+gh pr diff <url>
+gh pr view <url> --json files
+```
+
+Use the `gh pr diff` output as the unified diff source (same format as `git diff`). Use `gh pr view --json files` to get the list of changed files with `additions`, `deletions`, and `status`.
+
+**If `gh` is unavailable**, fall back to the GitHub MCP:
+
+```
+CallMcpTool: user-github / get_pull_request
+  owner: "<owner>"
+  repo: "<repo>"
+  pull_number: <number>
+
+CallMcpTool: user-github / get_pull_request_files
+  owner: "<owner>"
+  repo: "<repo>"
+  pull_number: <number>
+```
+
+The MCP `get_pull_request_files` returns each file with `filename`, `status`, `additions`, `deletions`, and `patch` (unified diff) — use `patch` as the diff source.
+
+### Step 1d (PR mode only): Existing PR feedback
+
+After you have `owner`, `repo`, `pull_number`, and file patches, **load existing reviews and comments** on this PR (humans, CodeRabbit, other bots) so your write-up does not mostly repeat what is already on the thread.
+
+**Fetch using `gh` CLI (primary):**
+
+```bash
+gh api repos/<owner>/<repo>/pulls/<pull_number>/reviews
+gh api repos/<owner>/<repo>/pulls/<pull_number>/comments
+gh api repos/<owner>/<repo>/issues/<pull_number>/comments
+```
+
+**If `gh` is unavailable**, fall back to the GitHub MCP — use any tools your `user-github` server exposes for listing pull request **reviews**, **inline review comments** (on the diff), and **issue / conversation comments** on the PR.
+
+Build a **short private digest** for yourself (do not dump the whole thread into the final review): bullets for each distinct theme, author when obvious (bot vs human), and `file:line` when the API provides it.
+
+**Dedupe rules (apply in Phase 2 when writing findings):**
+
+- Do **not** emit a numbered finding whose substance is **already well covered** by an existing open comment or review, unless you are **adding material evidence** (e.g. security, Jira AC gap), **correcting wrong or outdated advice**, or the earlier comment no longer applies to the **current** patch.
+- If you skip a finding purely for overlap, you may omit it, or add **one line** under optional heading **Existing feedback (PR)** only when it helps the author, e.g. "CodeRabbit already flagged missing tests for `foo.ts` — agree; no extra detail here."
+- Never paste long quotations of other reviewers' comments into your review body.
 
 **Then continue with Step 1b (Jira) and Step 1c (screenshot) as normal**, using the PR title and body for Jira key auto-detection instead of the branch name.
 
+### Evaluate a specific PR comment (PR context)
+
+When the user asks whether **one** existing comment is worth acting on (e.g. `"evaluate PR comment"`, `"assess PR comment"`, "is this CodeRabbit comment valid?", with a **paste of the comment**, a **permalink**, or **file + line + excerpt**), and a PR is in scope (PR URL in the message or already in PR Review Mode):
+
+1. Reuse or refresh the same fetches as **Step 1d** so you can match the user's reference to a real thread.
+2. Compare the comment to the **current PR diff** (`patch` per file) and to `docs/pr-review-guidelines.md` / `docs/best-practices.md` where relevant.
+3. Reply with a compact verdict (no Phase 2 template required unless the user asks for a full review):
+
+**Verdict:** Worth addressing / Partially / Nitpick / Not warranted (one line each for **why**).
+
+**Against the current diff:** Does it apply to changed lines? Is it still true after the latest commits?
+
+**Optional:** One-sentence **suggested reply** for the GitHub thread if the author should push back or ask for clarification.
+
+If the user did not supply a PR URL and you are not already in PR mode, ask once for the PR link.
+
 **PR mode limitations — note these in your review when relevant:**
-- You cannot run `git log`, `git blame`, or read files outside the diff. Work only from the diff.
+- You cannot run `git log`, `git blame`, or read files outside the diff. Work only from the `patch` data.
 - Impact analysis (Step 2b) is limited to what is visible in the PR diff. When it would require reading a local file, add a note: "Impact analysis limited to PR diff — verify locally that `<file>` still compiles."
-- All structural checks (Step 2) still apply — analyse the diff for each file as you would a `git diff`.
+- All structural checks (Step 2) still apply — analyse the `patch` for each file as you would a `git diff`.
 
 ---
 
@@ -214,7 +295,7 @@ For each changed or new file, run these deterministic checks:
 - Scan diffs for added `as` type casts that aren't in test files — flag each one.
 
 **Cypress flakiness patterns:**
-If the diff includes new or modified Cypress test files (`.cy.ts`, `.cy.tsx`), scan for patterns that commonly cause flaky tests. Flag each as **Consider** with category `tests`:
+If the diff includes new or modified Cypress test files (`.cy.ts`, `.cy.tsx`), scan for patterns that commonly cause flaky tests. Flag each as **Consider** with category `tests`. After flagging, note: "Run `python3 pre-commit-review/verify-cypress.py <spec-file> --runs 3` locally to confirm the test is stable before merging."
 - `cy.wait(<number>)` — hardcoded timeout instead of waiting for a condition (`cy.intercept` + `cy.wait('@alias')`)
 - Selecting by index, text content, or CSS class instead of `data-testid`
 - Network calls without matching `cy.intercept()` — causes race conditions
@@ -263,137 +344,37 @@ Report these as category `impact` with urgency based on likelihood of breakage:
 
 Read each changed file (not just the diff — read the full file for context). Analyze:
 
-- **Error handling:**
-
-  ```tsx
-  // BAD: no loading state, no error handling, button can be spammed
-  const handleSubmit = () => {
-    api.createResource(data);
-  };
-  return <Button onClick={handleSubmit}>Submit</Button>;
-
-  // GOOD: loading state, error handling, button disabled during submit
-  const [isSubmitting, setIsSubmitting] = React.useState(false);
-  const [error, setError] = React.useState<Error>();
-  const handleSubmit = async () => {
-    setIsSubmitting(true);
-    try {
-      await api.createResource(data);
-    } catch (e) {
-      setError(e instanceof Error ? e : new Error('Failed to create'));
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-  return (
-    <>
-      {error && <Alert variant="danger" title={error.message} />}
-      <Button onClick={handleSubmit} isDisabled={isSubmitting || !isValid}>
-        {isSubmitting ? <Spinner size="sm" /> : 'Submit'}
-      </Button>
-    </>
-  );
-  ```
+- **Error handling:** Flag async submit handlers missing any of: `try/catch`, loading state (`isSubmitting` or equivalent), error surfacing (`<Alert variant="danger">`), button `isDisabled` during submit. All four must be present in a submit flow. Flag each missing piece as **Should fix** [ERROR-HANDLING]. Also flag data fetches with no loading/error state exposed to the UI.
 
 - **Type safety:**
-
-  ```tsx
-  // BAD: `as` covering up a type error
-  const name = (data as any).metadata.name;
-
-  // GOOD: proper type guard
-  const isK8sResource = (obj: unknown): obj is K8sResource =>
-    typeof obj === 'object' && obj !== null && 'metadata' in obj;
-  const name = isK8sResource(data) ? data.metadata.name : undefined;
-
-  // BAD: optional chaining without fallback
-  const label = resource?.metadata?.labels['app'];
-
-  // GOOD: fallback value
-  const label = resource?.metadata?.labels?.['app'] ?? '';
-
-  // BAD: optional prop because it's "easier for types"
-  type Props = { data?: SomeType; onUpdate?: (d: SomeType) => void };
-
-  // GOOD: truly optional, or use EitherNotBoth
-  type Props = { data: SomeType; onUpdate: (d: SomeType) => void };
-  // or when props conflict:
-  type Props = EitherNotBoth<{ editing: true; onSave: () => void }, { editing?: false }>;
-
-  // BAD: ignoring hook dependency
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  useEffect(() => { fetchData(); }, []);
-
-  // GOOD: include the dependency, memoize if needed
-  const fetchData = useCallback(async () => { /* ... */ }, [filter]);
-  useEffect(() => { fetchData(); }, [fetchData]);
-  ```
+  - `as` cast outside test files → **Should fix** [TYPES]: suggest a type guard or proper narrowing instead
+  - `(x as any)` anywhere → **Must fix** [TYPES]: eliminates all type safety
+  - Optional chaining result used directly without `?? fallback` (e.g. `a?.b?.c` assigned to a non-optional) → **Consider** [TYPES]
+  - Props marked optional (`prop?:`) that are always passed by all call sites → **Consider** [TYPES]: make required, or use `EitherNotBoth` for mutually exclusive states
+  - `// eslint-disable-next-line react-hooks/exhaustive-deps` → **Must fix** [TYPES]: add the missing dep and wrap with `useCallback` if needed to keep stability
 
 - **Edge cases:** Are null/undefined checks present? Empty arrays handled? Loading/error states covered?
 
 - **Performance:**
+  - `useCallback` wrapping a function used only locally (not passed as prop, not returned from a hook) → **Consider** [PERF]: plain function is fine, `useCallback` adds overhead not benefit
+  - `useEffect` + `useState` where the value can be derived during render → **Should fix** [PERF]: replace with `useMemo` to avoid the extra render cycle
+  - `useMemo` for trivial computation (string concatenation, arithmetic, single boolean) → **Consider** [PERF]: compute inline
+  - Function or object returned from a custom hook without `useCallback`/`useMemo` → **Should fix** [PERF]: callers get a new reference every render, breaking memoization in consuming components:
 
   ```tsx
-  // BAD: useCallback for simple handler not passed as prop
-  const handleClick = useCallback(() => setCount(c => c + 1), []);
-  return <button onClick={handleClick}>+</button>;
-
-  // GOOD: plain function is fine here
-  const handleClick = () => setCount(c => c + 1);
-
-  // BAD: useEffect + useState when useMemo suffices
-  const [filtered, setFiltered] = useState<Item[]>([]);
-  useEffect(() => {
-    setFiltered(items.filter(i => i.active));
-  }, [items]);
-
-  // GOOD: useMemo — no extra render cycle
-  const filtered = useMemo(() => items.filter(i => i.active), [items]);
-
-  // BAD: function returned from custom hook without memoization
+  // BAD: new function reference every render
   const useData = () => {
-    const refresh = () => api.fetch().then(setData); // unstable!
+    const refresh = () => api.fetch().then(setData);
     return { data, refresh };
   };
-
-  // GOOD: memoize functions leaving custom hooks
+  // GOOD: stable reference
   const useData = () => {
     const refresh = useCallback(() => api.fetch().then(setData), []);
     return { data, refresh };
   };
-
-  // BAD: useMemo for trivial computation
-  const fullName = useMemo(() => `${first} ${last}`, [first, last]);
-
-  // GOOD: just compute it
-  const fullName = `${first} ${last}`;
   ```
 
-- **Component architecture:**
-
-  ```tsx
-  // BAD: component doing too many things
-  const ProjectPage = ({ project }) => {
-    // 50 lines of data fetching
-    // 30 lines of form state
-    // 20 lines of validation
-    // 100 lines of JSX
-  };
-
-  // GOOD: broken into single-goal pieces with custom hooks
-  const ProjectPage = ({ project }) => {
-    const { data, loading, error } = useProjectData(project.name);
-    const { formState, validate, handleSubmit } = useProjectForm(data);
-    return <ProjectForm state={formState} onSubmit={handleSubmit} />;
-  };
-
-  // BAD: passing entire object when only name is needed
-  <NotebookLabel notebook={notebook} />
-  // where NotebookLabel only uses notebook.metadata.name
-
-  // GOOD: pass only what's needed
-  <NotebookLabel name={notebook.metadata.name} />
-  ```
+- **Component architecture:** Flag a component that mixes more than one of: data fetching/API calls, form/local state management, validation logic, or >50 lines of JSX — suggest extracting data and state logic into custom hooks. Flag props passing a whole object when the component body only uses one field — suggest passing only the needed value. **Consider** [QUALITY] for both.
 
 - **Patterns:** Does the code follow patterns already established in the codebase? (Check neighboring files for conventions.)
 
@@ -401,59 +382,55 @@ Read each changed file (not just the diff — read the full file for context). A
   - `git log --oneline -5 -- <file>` — was this area recently refactored? Is the pattern new or long-established?
   - If the surrounding code follows the same pattern you're about to flag, the pattern may be intentional. Downgrade to **Consider** and note: "existing pattern in this file — verify if intentional"
   - If the pattern was introduced recently and differs from the rest of the codebase, it's more likely a mistake. Keep the urgency.
-- **PatternFly:** If the diff touches `.tsx` files, scan for inline/raw HTML that should be a PF component. Flag these:
+- **PatternFly:** Before running any PF checks, verify at least one of these is true: (a) diff imports from `@patternfly/*`, (b) `docs/best-practices.md` exists and mentions PatternFly, (c) `.claude/rules/css-patternfly.md` exists. If none are true, skip this section and note "No PF context detected."
 
-  | Instead of | Should use |
-  |-----------|------------|
-  | `<button>`, `<div onClick>` | `<Button>` from `@patternfly/react-core` |
+  When PF context is confirmed, read `docs/best-practices.md` first — it is the authoritative source for PF-first rules in this project. Then apply these checks:
+
+  **Check 1 — Raw HTML where a PF component exists → Should fix [PF]**
+  The rule: in a `.tsx` file in a PF project, any native HTML element that has a PF equivalent should not be used. Quick reference for common cases:
+
+  | Instead of | Use |
+  |-----------|-----|
+  | `<button>`, `<div onClick>` | `<Button>` |
   | `<a href>` | `<Button variant="link">` or PF router link |
-  | `<input>`, `<textarea>` | `<TextInput>`, `<TextArea>` |
-  | `<select>` | `<Select>`, `<SimpleSelect>` |
+  | `<input>`, `<textarea>`, `<select>` | `<TextInput>`, `<TextArea>`, `<Select>` |
   | Raw `<table>`, `<tr>`, `<td>` | PF `<Table>` components |
-  | Custom modal / dialog div | `<Modal>` |
-  | Custom alert / error div | `<Alert>` |
-  | Custom spinner / loading div | `<Spinner>`, `<Bullseye>` |
+  | Custom modal / alert / spinner div | `<Modal>`, `<Alert>`, `<Spinner>` |
   | `<h1>`–`<h6>` | `<Title>`, `<Content>` |
-  | Inline `style={{}}` for layout | PF layout: `<Flex>`, `<Stack>`, `<Grid>`, `<Gallery>` |
-  | Inline `style={{}}` for colors | PF CSS variables (`--pf-t--global--color--*`) |
-  | Raw spacing via margin/padding | PF spacer props or utility classes |
 
-  **PF-first rules:**
-  - No custom CSS/styles to "nudge" PF components — if you need custom styling, you're likely going in the wrong direction
-  - Custom components belong in `frontend/src/concepts/dashboard` (for PF workarounds) or `frontend/src/components` (for genuinely new components) — not scattered in feature code
-  - PF workaround styles should be used sparingly — they break on PF upgrades
+  For elements not in this table — search 2–3 neighboring files for how the same pattern is implemented. If the codebase uses PF for it, flag as **Should fix** [PF]. If the codebase also uses raw HTML, downgrade to **Consider** and note "existing pattern — verify if intentional." If no PF equivalent exists (e.g. `<canvas>`, `<video>`), flag as **FYI** [PF]: "If PF can't cover this, add a `// TODO: PF gap` comment above it."
 
-  Also check: are PF component props correct? (e.g. `variant`, `size`, `status` values). To verify, try in order:
-  1. **Context7 MCP (if available):** `resolve-library-id` with `libraryName: "patternfly"`, then `query-docs` with the resolved ID and a specific query
-  2. **Web search (fallback):** Search the specific component on `patternfly.org`
-  3. **Codebase patterns (always):** Check how the same component is used elsewhere in the repo
+  **Check 2 — Direct `@patternfly/*` import when a project wrapper exists → Should fix [PF]**
+  Parse import declarations in the diff. For each `import { X } from '@patternfly/react-core'` (or other `@patternfly/*` packages): check if `frontend/src/components/` or `frontend/src/concepts/dashboard/` contains a wrapper for `X`. If yes, flag: "use project wrapper instead of raw PF component." Skip the wrapper's own implementation file.
+
+  **Check 3 — Inline `style={{}}` → Should fix [PF]**
+  Any `style={{}}` prop on a PF component is almost always wrong. Follow the priority order before concluding custom styling is needed:
+  1. PF component prop (e.g. `variant`, `isFullWidth`, `isInline`)
+  2. PF layout component (`<Flex>`, `<Stack>`, `<Grid>`, `<Gallery>`)
+  3. PF CSS variables (`--pf-t--global--color--*`, spacer tokens)
+  4. Custom CSS (last resort — if needed, belongs in `frontend/src/concepts/dashboard`, not inline)
+
+  If a genuine PF gap exists (PF truly cannot do it), flag as **FYI** [PF] — not a violation.
+
+  **Check 4 — PF component props correct?** (e.g. `variant`, `size`, `status` values)
+  Verify in order: (1) Context7 MCP if available, (2) `patternfly.org`, (3) how the same component is used elsewhere in the repo.
 
 ### Step 3b: Context7 best-practice lookups (if MCP available)
 
-If the Context7 MCP is configured, use it to fetch **up-to-date best practices** for patterns found in the diff. This goes beyond the hardcoded examples above — it catches evolving APIs, deprecated patterns, and component-specific nuances the static prompt doesn't cover.
+If the Context7 MCP is configured, use it to fetch **up-to-date best practices** for patterns found in the diff. This goes beyond the project docs and Step 3 rules — it catches evolving APIs, deprecated patterns, and component-specific nuances.
 
-**Skip this step entirely if Context7 MCP is not available.** The embedded examples in Step 3 are sufficient on their own. Context7 is strictly additive.
+**Skip this step entirely if Context7 MCP is not available.** Step 3 plus the linked `docs/*` (and `react.md` when present) are sufficient on their own. Context7 is strictly additive.
 
 **Library IDs:**
 - React docs: `/websites/react_dev`
 - PatternFly React: `/patternfly/patternfly-react`
 
-**Trigger-based lookups — only query when you spot these patterns in the diff:**
+**When to query:**
+- **React hooks** (`useEffect`+`useState`, `useMemo`, `useCallback`, `forwardRef`, `useRef`, `Suspense`, `dangerouslySetInnerHTML`): query `/websites/react_dev` with the pattern name + "best practices pitfalls"
+- **Any PF component** in the diff: query `/patternfly/patternfly-react` with the component name + "props variants accessibility"
+- **Any other hook or pattern you're uncertain about**: query `/websites/react_dev`
 
-| Pattern in diff | Query to run | Library |
-|----------------|-------------|---------|
-| `useEffect` + `useState` in same component | "you might not need an effect, when to avoid useEffect with useState" | `/websites/react_dev` |
-| `useMemo` or `useCallback` usage | "when to use useMemo useCallback performance optimization pitfalls" | `/websites/react_dev` |
-| Custom hook returning functions or objects | "custom hooks best practices returning stable references" | `/websites/react_dev` |
-| `forwardRef` usage | "forwardRef best practices ref as prop" | `/websites/react_dev` |
-| `useRef` for DOM manipulation | "useRef best practices DOM access when to use ref" | `/websites/react_dev` |
-| `dangerouslySetInnerHTML` | "safely rendering HTML content sanitization" | `/websites/react_dev` |
-| `Suspense` or lazy loading | "Suspense lazy loading best practices fallback" | `/websites/react_dev` |
-| Any PF component (`<Button>`, `<Modal>`, `<Table>`, `<Select>`, `<Toolbar>`, etc.) | "[ComponentName] props variants accessibility examples" | `/patternfly/patternfly-react` |
-| PF layout components (`<Flex>`, `<Grid>`, `<Stack>`, `<Gallery>`) | "[ComponentName] layout responsive props gap spacing" | `/patternfly/patternfly-react` |
-| PF form components (`<TextInput>`, `<FormGroup>`, `<FormSelect>`) | "[ComponentName] validation helper text accessibility" | `/patternfly/patternfly-react` |
-
-| Any other React hook or pattern you're uncertain about | "[pattern name] best practices common pitfalls" | `/websites/react_dev` |
+Max **3 calls per review** — prioritize patterns you're least confident about or PF components not seen elsewhere in the codebase.
 
 **How to use the results:**
 1. Compare what Context7 returns against what the diff does. If the diff violates documented best practices, include it as a finding.
@@ -466,6 +443,8 @@ If the Context7 MCP is configured, use it to fetch **up-to-date best practices**
 ## Phase 2: PRESENT
 
 Output the review in this exact structure. **Every heading and label must include both the emoji AND the text label** so the output is readable even when emojis don't render (known Cursor issue).
+
+In **PR Review Mode**, apply **Step 1d dedupe rules** when you write findings: do not repeat threads that already exist on the PR unless you add real new signal (see Step 1d).
 
 ### Part A: Change Walkthrough
 
@@ -489,6 +468,25 @@ Before findings, output a structured summary of what changed. Group related file
 - **3/5** — Moderate: multiple files, some type/prop changes, UI work
 - **4/5** — Large: cross-cutting changes, new feature, architectural impact
 - **5/5** — Complex: many files, new patterns, needs careful review of interactions
+
+### Part A2: What's done well
+
+After the walkthrough table, always include this section — never skip it even if the review has many findings.
+
+```
+### ✅ What's done well
+
+- [specific thing done correctly — cite file:line or a named pattern visible in the diff]
+- [specific thing — e.g. "Error states handled consistently across all async calls in useKueueStatus.ts:34–67"]
+- [specific thing — e.g. "Cypress test uses data-testid selectors throughout — no brittle text matching"]
+```
+
+**Rules:**
+- 2–4 bullets, always present
+- **Every bullet must cite `file:line` or a specific pattern visible in the diff** — generic observations ("good variable names", "clean code") are not acceptable
+- If only one genuinely notable thing exists, write one bullet — do not pad
+- If the diff is problematic with nothing to highlight: `"The intent is clear from the PR description and the fix is targeted to the right location."`
+- **Hallucination guard:** A highlight that cannot be traced to a specific file, line, or named pattern in the diff is fabricated. Do not write it.
 
 ### Part B: Detailed Findings
 
@@ -518,26 +516,8 @@ Only include **Must fix**, **Should fix**, and **Consider** in the numbered find
 
    **Current:**
    ```tsx
-   // the problematic code as it exists now
-   ```
-
-   **Improved:**
-   ```tsx
-   // what the code should look like
-   ```
-
----
-
-### SHOULD FIX ([n])
-
-2. [CATEGORY_TAG] · `file/path.ts:lineRange` · Should fix
-   > description of the issue
-
-   **Current:**
-   ```tsx
    // the problematic code
    ```
-
    **Improved:**
    ```tsx
    // the fix
@@ -545,33 +525,20 @@ Only include **Must fix**, **Should fix**, and **Consider** in the numbered find
 
 ---
 
+### SHOULD FIX ([n])
 ### CONSIDER ([n])
-
-3. [CATEGORY_TAG] · `file/path.ts:lineRange` · Consider
-   > description of the issue
-
-   **Current:**
-   ```tsx
-   // what exists
-   ```
-
-   **Improved:**
-   ```tsx
-   // what would be better
-   ```
+(same structure as MUST FIX — one numbered finding per entry, with Current/Improved blocks)
 
 ---
 
 ### NITPICKS
-- `file.ts:line` — brief description
 - `file.ts:line` — brief description
 
 ---
 
 ### FYI — Impact & related files
 - `file.ts` imports `ChangedType` — verify it still compiles after type change
-- `OtherComponent.tsx` uses `<ModifiedComponent>` — verify prop shape still matches
-(If no impact concerns, write: "No impact concerns detected.")
+(If none: "No impact concerns detected.")
 ```
 
 **Category tags (use in place of CATEGORY_TAG):**
@@ -597,15 +564,11 @@ After all detailed findings, close with a summary table that recaps every findin
 
 | # | Urgency | Category | File | Issue |
 |---|---------|----------|------|-------|
-| 1 | Must fix | CLEANUP | `kueue/index.ts:91` | Debug console.log left in production code |
-| 2 | Must fix | TESTS | `kueue/index.ts` | No unit tests for formatKueueTimestamp, isKueueStatusCritical |
-| 3 | Should fix | PF | `NotebookStateStatus.tsx:104` | Inline style + raw div instead of PF layout |
-| 4 | Should fix | REQUIREMENT | Jira RHOAIENG-50647 | AC 1 and AC 2 not implemented in diff |
-| 5 | Consider | QUALITY | `useKueueStatusForNotebooks.ts:41` | Unrelated trailing blank line removal |
+| 1 | Must fix | CLEANUP | `kueue/index.ts:91` | console.log left in production code |
 | — | Nitpick | — | `types.ts:12` | Trailing whitespace |
-| — | FYI | IMPACT | `StartNotebookModal.tsx` | Imports KueueStatus which changed — verify |
+(one row per finding — numbered for Must/Should/Consider, — for Nitpick/FYI)
 
-**TL;DR:** 2 must-fix (console.log + missing tests), 3 should-fix (PF standards, missing AC), 1 nitpick. Main concern: Jira acceptance criteria not addressed.
+**TL;DR:** [n] must-fix ([key issues]), [n] should-fix. Main concern: [single most important takeaway].
 
 Which findings should I fix? (e.g. "fix 1, 3, 5" or "fix all must-fix" or "skip")
 ```
@@ -639,6 +602,21 @@ When the user tells you which findings to fix:
 Read `docs/agent-rules/unit-tests.md` first, then generate the test file:
 
 1. **Determine what changed.** Read the source file. Identify every exported function, hook, or component that is new or modified in the diff.
+
+1a. **Enumerate distinct execution paths before writing any tests.** For each target, list:
+   - Happy path (valid input, expected output)
+   - Empty / null / undefined inputs
+   - Boundary values (zero, max, edge of range)
+   - Error / rejection / thrown case
+   - Each branch of conditional logic (if/else, switch, ternary)
+
+   Write **one test per distinct path**. Before finalising, check:
+   - If two tests would always pass and fail together → they are duplicates. Merge into `it.each` or a single test with multiple `expect` calls.
+   - If a test would break when you rename a private variable → it tests implementation, not behavior. Rewrite to test the output or observable side-effect instead.
+   - Prefer `it.each` for the same assertion across multiple input/output pairs rather than repeated `it()` blocks.
+
+   **Hallucination guard:** State the execution paths you identified before writing tests. If a test doesn't map to a named path, don't write it.
+
 2. **Find the test location.** Source at `src/foo/bar.ts` → test at `src/foo/bar/__tests__/bar.spec.ts`. If the `__tests__` directory doesn't exist, create it. If a test file already exists, add to it — don't overwrite.
 3. **Check for existing mocks.** Search `@odh-dashboard/internal/__mocks__` for mock factories relevant to the types used (e.g. `mockNotebookK8sResource`, `mockProjectK8sResource`). Use them instead of creating inline mocks.
 4. **Generate tests by category:**
@@ -689,37 +667,248 @@ If a fix introduces a new error (lint failure, type error, test failure):
 
 If the user says `"revert <N>"` after a fix has been applied, undo only finding #N's changes while keeping all other fixes intact.
 
+### Phase 3c: Reviewer questions
+
+Triggered by `"reviewer questions"` or `"questions"` (in either mode).
+
+**Do not run the checklist.** Read the diff + any available context (PR description, Jira ticket, git log) and generate 3–5 questions a thoughtful senior engineer would post as PR comments. Focus on: intent (why this approach?), safety (what happens if X?), completeness (did you consider Y?).
+
+**Output format:**
+
+```
+### Questions a reviewer might ask
+
+1. `src/file.ts:42` — The fallback here returns `[]` on parse error. Was this intentional, or should it surface the error to the caller?
+2. `useHook.ts:18` — `useCallback` wraps a function that closes over `data`. If `data` changes, does the callback update correctly?
+3. General — The PR description says this fixes 2.x profiles. Is there a migration path for profiles created in 3.0 with the same annotation format?
+```
+
+**Hallucination guard:** Every question must be anchored to either a specific `file:line` from the diff, or a named concern from the PR description / Jira ticket. Questions not traceable to real diff content must not be written. Generic questions ("Did you test this?", "Is this performant?") are not acceptable.
+
 ### PR Review Mode — Posting a review
 
 In PR mode, you cannot edit the author's files directly. Instead, after presenting findings, ask:
 
-> **"Want me to post these findings as a GitHub PR review comment? ('post review' / 'approve PR' / 'request changes' / 'skip')"**
+> **"Want me to post these findings? ('post review' / 'request changes' / 'post inline 1,3,5' / 'post all must-fix inline' / 'preview comments' / 'skip')"**
 
 Format the findings as the Phase 2 output (Change Walkthrough + Detailed Findings + Summary Table), but **omit the "Which findings should I fix?" action prompt** at the end.
 
-**Post the review using the GitHub MCP if configured:**
-- `create_pull_request_review` (owner, repo, pull_number, body, event)
-- `event: "COMMENT"` — for neutral findings (default)
-- `event: "APPROVE"` — only if the review is clean (0 must-fix, 0 should-fix) and the user said "approve PR"
-- `event: "REQUEST_CHANGES"` — when there are Must fix findings and the user said "request changes"
-- You can include per-line inline comments in the `comments` array — attach specific findings to their exact `path` + `line` when the PR diff makes the position clear.
+**Posting commands:**
 
-**Or using the `gh` CLI:**
+| Command | What it does |
+|---------|-------------|
+| `post review` | Post full review as one summary PR review comment |
+| `request changes` | Post findings and formally request changes (use when Must fix findings exist) |
+| `post inline 1,3,5` | Post selected findings as inline comments on their exact file + line |
+| `post all must-fix inline` | Post all Must fix findings as inline comments |
+| `post all should-fix inline` | Post all Should fix findings as inline comments |
+| `preview comments` | Show exactly what would be posted before sending anything |
+
+**Guardrails:**
+- Always offer `preview comments` before executing a post — the user should see what goes out
+- Only post inline if the finding has a clear `file:line` — otherwise include it in the summary body
+- Batch Nitpick / Consider / FYI into the summary body, never inline
+- Before posting: check Step 1d data — skip if the same location already has an open comment saying the same thing
+
+**Post using `gh` CLI (primary):**
 
 ```bash
-# Comment
+# Summary review (comment)
 gh pr review <url> --comment --body "<formatted findings>"
-
-# Approve
-gh pr review <url> --approve --body "<formatted findings>"
 
 # Request changes
 gh pr review <url> --request-changes --body "<formatted findings>"
 ```
 
+**Inline comments — use `gh api`:**
+
+```bash
+gh api repos/{owner}/{repo}/pulls/{number}/reviews \
+  --method POST \
+  --field commit_id="<headRefOid>" \
+  --field body="<overall summary>" \
+  --field event="COMMENT" \
+  --field "comments[][path]"="src/file.ts" \
+  --field "comments[][line]"=42 \
+  --field "comments[][body]"="finding text"
+```
+
+**If `gh` is unavailable**, fall back to the GitHub MCP:
+
+```
+CallMcpTool: user-github / create_pull_request_review
+  owner: "<owner>"
+  repo: "<repo>"
+  pull_number: <number>
+  body: "<formatted findings>"
+  event: "COMMENT"   # or "REQUEST_CHANGES" — never "APPROVE"
+```
+
 **Notes:**
 - The "fix", "generate tests", and "revert" commands do not apply in PR mode — you are reviewing someone else's branch.
-- "re-review" also does not apply unless the author pushes new commits and you refetch the diff.
+
+### Re-review in PR mode
+
+Triggered by `"re-review PR"` or `"re-review PR since <sha>"` while in PR Review Mode.
+
+**Steps:**
+1. Fetch the latest PR diff: `gh pr diff <url>`
+2. Fetch the latest head SHA: `gh pr view <url> --json headRefOid`
+3. Compare against findings from this session:
+   - Code is gone from the new diff → **✅ Resolved**
+   - Code still present, issue unchanged → **⚠️ Still open**
+   - Code changed but issue partially remains → **⚠️ Partially addressed** (note what changed)
+4. For lines not in the previous diff (new code from new commits): run full review checks → present as **🆕 New findings**
+5. With `"re-review PR since <sha>"`: scope new-finding scan to commits after that SHA only
+
+**Output format:**
+```
+## Re-Review — after latest commits
+
+### ✅ Resolved (2)
+- Finding #1 [CLEANUP] console.log removed in latest commit
+- Finding #3 [TESTS] unit test added for formatKueueTimestamp
+
+### ⚠️ Still open (1)
+- Finding #2 [PF] inline style on NotebookStateStatus.tsx:104 — unchanged
+
+### 🆕 New findings (1)
+1. [TYPES] · `useKueueStatus.ts:58` · Should fix
+   > New `as` cast introduced in latest commit — ...
+```
+
+**Guardrails:**
+- Does NOT rely on session memory — re-fetches fresh diff and dedupes against what's already posted on the PR (Step 1d data) and the previous review summary visible in the conversation
+- If no previous review is visible in the conversation: treat as a first review — full depth
+- Do not mark a finding as "resolved" unless the code it pointed to is confirmed absent from the current diff. If uncertain: "⚠️ Still open — verify"
+
+---
+
+## Phase 3b: DEEP REVIEW
+
+Triggered by `"deep review"` or `"deep review <file>"`. This is a separate mode from the standard checklist review — it can run after a standard review as a second pass, or standalone at any time.
+
+**Suspend the entire checklist.** Do not look for console.log, missing tests, PF violations, type safety patterns, or any of the standard categories. Do not apply any rule from Phases 1–3. The checklist does not exist in this mode.
+
+Your only job: **read the code as a thoughtful senior engineer and find problems with the reasoning, logic, design, and correctness.**
+
+### Step 1: Resolve the target files
+
+- `"deep review"` → use all files changed in `git diff` + `git diff --cached`. If in PR mode, use all files from the PR diff.
+- `"deep review <file>"` → use only that specific file. The file does not need to be in the current diff — the user can deep review any file at any time.
+
+### Step 2: Identify language and context
+
+Before reading anything, determine what you're looking at. This sets the lens for the whole review.
+
+| Signal | Context | How it changes your review |
+|--------|---------|---------------------------|
+| `.tsx` / `.jsx`, imports from `react`, `@patternfly` | **React component** | Focus on render correctness, hook rules, state/effect coupling, prop contracts, UI edge cases |
+| `.ts` / `.js` with no JSX, exports utility functions or hooks | **TypeScript utility / custom hook** | Focus on return value correctness, referential stability, input edge cases, async handling |
+| Files in `packages/*/server/`, `routes/`, `app.ts`, express/fastify imports | **Node.js BFF route / middleware** | Focus on error propagation, async/await correctness, request validation, API contract, missing status codes |
+| `.go` files | **Go service** | Focus on error return handling (`if err != nil`), nil pointer dereferences, goroutine leaks, interface satisfaction, defer correctness |
+| `.yaml` / CRD / operator files | **K8s configuration** | Focus on field correctness, missing required fields, version compatibility, resource limits |
+
+Read related files based on context:
+- **React component** → read the custom hooks it uses, read the parent component if props are confusing
+- **Custom hook** → read all call sites to understand the expected contract
+- **BFF route** → read the frontend fetch function consuming it, read the service layer it calls
+- **Go handler** → read the interface it implements, read the caller
+
+Read git context for intent in all cases: `git log --oneline -10 -- <file>`
+
+### Step 3: Ask these questions
+
+The core questions are universal — but what they look like differs by language. Work through these as genuine questions, not a checklist:
+
+**Correctness**
+- Does this code actually do what it's supposed to do?
+- Are there execution paths that produce wrong results or silent failures?
+- *React/TS:* null/undefined cases TypeScript allows but runtime will break on; optional chaining returning undefined silently propagated
+- *BFF/Node.js:* unhandled promise rejections; missing `await` causing a resolved Promise to be returned instead of the value; wrong HTTP status codes
+- *Go:* ignored error return values (`_`); nil pointer dereference; wrong type assertion without ok check
+
+**Race conditions and async**
+- *React:* stale closure in `useEffect` or `useCallback`; state update after unmount; effect running before data is ready
+- *BFF/Node.js:* concurrent requests sharing mutable state; unhandled rejection in a `Promise.all`; middleware that assumes serial execution
+- *Go:* unsynchronized map/slice access across goroutines; goroutine leak (started but never exits); channel deadlock
+
+**Fragility**
+- Does this break if inputs are slightly different from the happy path?
+- Does it depend on the caller to do something that isn't enforced by the type system?
+- Is there implicit ordering — does this work correctly only if something else ran first?
+- *React:* component assumes parent always passes a non-null prop; hook assumes it's only called once
+- *BFF:* route assumes request body is always valid without validating; assumes a header is always present
+- *Go:* function assumes slice is non-empty; assumes map key always exists
+
+**Design**
+- Is this solving the right problem, or a slightly wrong version of it?
+- Is the abstraction level right — too low (leaking implementation details) or too high (hiding necessary control)?
+- Are there responsibilities mixed together that should be separated?
+- Is there a simpler implementation that does the same thing with less surface area?
+- Does the naming match what the code actually does?
+
+**Intent vs. implementation**
+- Does the code do what the commit message / PR description / Jira AC says it should?
+- Are there edge cases mentioned in the ticket the implementation doesn't handle?
+- Are there commented-out code, TODOs, or `// temporary` markers suggesting incomplete work?
+
+### Step 4: Output format
+
+Use a distinct format from the standard review to make it clear this is a deep review pass:
+
+```
+## Deep Review — <filename or "all changed files">
+
+### [LOGIC] · `file/path.ts:lineRange`
+> What the code does vs. what it should do — explain the specific reasoning error.
+
+**Why this is wrong:**
+[explanation — be specific, cite the exact scenario that breaks]
+
+**Current:**
+```ts
+// the problematic code
+```
+
+**Better:**
+```ts
+// the corrected version
+```
+
+---
+
+### [DESIGN] · `file/path.ts:lineRange`
+> ...
+
+---
+
+### [FRAGILE] · `file/path.ts:lineRange`
+> ...
+```
+
+**Deep review category tags:**
+- `**[LOGIC]**` — the code produces wrong results in some condition
+- `**[FRAGILE]**` — correct now but will break under slightly different conditions
+- `**[DESIGN]**` — wrong abstraction, wrong responsibility, wrong level
+- `**[INTENT]**` — implementation doesn't match what the code is supposed to accomplish
+- `**[SILENT-FAILURE]**` — errors are swallowed, state is corrupted silently, wrong path taken without any signal
+- `**[RACE]**` — async ordering issue, concurrent state problem
+- `**[NAMING]**` — name is actively misleading about what the code does
+
+**No urgency labels in deep review.** Everything reported here is worth looking at — if it's not, don't report it. Be selective: a deep review with 3 real findings is better than one with 10 weak ones.
+
+Close with:
+
+```
+## Deep Review Summary
+
+[1-2 sentences on the overall code quality and the most important finding. Be direct.]
+
+Want me to fix any of these? (e.g. "fix logic 1" or "fix all")
+```
+
+Fixes from deep review follow the same Phase 3 fix process. The user can say `"fix logic 1"` or `"fix all"` to apply them.
 
 ---
 
@@ -728,6 +917,6 @@ gh pr review <url> --request-changes --body "<formatted findings>"
 - **Phases 1–2 are read-only.** Do not modify any files until the user explicitly tells you which findings to fix.
 - **Always cite file and line.** Never report a finding without a specific file path and line range.
 - **Don't invent issues.** If you're not sure something is a problem, label it as a suggestion and say "verify manually."
-- **Be honest about urgency.** Not everything is a must-fix. Most things are should-fix or consider.
+- **Be honest about urgency.** Not everything is **Must fix**; most findings should be **Should fix** or **Consider**.
 - **Don't fix what wasn't asked.** Only fix the findings the user selected.
 - **Don't touch unrelated code.** When fixing a finding, only change what's necessary for that finding.
